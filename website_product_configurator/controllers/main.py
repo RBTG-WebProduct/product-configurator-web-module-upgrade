@@ -6,7 +6,7 @@ from odoo.http import request
 from odoo.tools.safe_eval import safe_eval
 
 from odoo.addons.website_sale.controllers.main import WebsiteSale
-from odoo.addons.website_sale.controllers.product_configurator import (
+from odoo.addons.website_sale.controllers.product_configurator import (  # ← Fixed import path
     WebsiteSaleProductConfiguratorController,
 )
 
@@ -14,21 +14,21 @@ _logger = logging.getLogger(__name__)
 
 
 class CustomWebsiteSaleProductConfigurator(WebsiteSaleProductConfiguratorController):
-    def show_advanced_configurator(
-        self,
-        product_id,
-        variant_values,
-        add_qty=1,
-        force_dialog=False,
-        **kw,
+    @http.route()  # ← Override the existing route
+    def website_sale_should_show_product_configurator(  # ← New method name
+        self, product_template_id, ptav_ids, is_product_configured
     ):
-        """Inherit: skips showing the advanced product configurator modal for
-        a product"""
-        product = request.env["product.product"].sudo().browse(int(product_id))
-        if product.config_ok:
+        """ Override: skip showing the product configurator modal for configurable products """
+        _logger.warning(f"website_sale_should_show_product_configurator called with product_template_id: {product_template_id}")
+        
+        product_template = request.env['product.template'].browse(product_template_id)
+        if product_template.config_ok:  # ← Your OCA configurator check
+            _logger.warning("Returning False for configurable product - bypassing modal")
             return False
-        return super().show_advanced_configurator(
-            product_id, variant_values, add_qty=add_qty, force_dialog=force_dialog, **kw
+            
+        # For non-configurable products, use the standard logic
+        return super().website_sale_should_show_product_configurator(
+            product_template_id, ptav_ids, is_product_configured
         )
 
 
