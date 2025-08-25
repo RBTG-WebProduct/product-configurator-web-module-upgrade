@@ -469,7 +469,8 @@ class ProductProduct(models.Model):
 
     def _inverse_product_weight(self):
         """Store weight in dummy field"""
-        self.weight_dummy = self.weight
+        for product in self:
+            product.weight_dummy = product.weight
 
     config_name = fields.Char(
         string="Configuration Name", compute="_compute_config_name"
